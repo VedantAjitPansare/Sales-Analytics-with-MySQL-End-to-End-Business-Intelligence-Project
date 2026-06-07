@@ -1,0 +1,59 @@
+This guide walks you through importing a CSV file into a MySQL table using the LOAD DATA LOCAL INFILE command. It covers enabling the required settings, writing the correct file path, and handling common date format issues.
+
+Before You Start
+You have MySQL installed (version 8.0 or later).
+
+You have a CSV file to import (e.g., sales_orders.csv).
+
+You have a target table already created in your database (e.g., sales_orders).
+
+Step 1: Enable local_infile on the MySQL Server
+Open a SQL query tab in MySQL Workbench (or use the command line) and run:
+SET GLOBAL local_infile = 1;
+To verify it worked:
+SHOW VARIABLES LIKE 'local_infile';
+Expected output: local_infile | ON
+Note: This setting resets after a server restart. For a permanent change, add local_infile=1 to your MySQL configuration file (my.ini or my.cnf) and restart the server.
+
+Step 2: Enable local_infile in Your MySQL Client
+If using MySQL Workbench:
+Go to the Home tab (where you see your database connections).
+
+Right‑click your connection and choose Edit Connection.
+
+Switch to the Advanced tab.
+
+In the Others: text box, add this line:
+
+OPT_LOCAL_INFILE=1
+Click Test Connection, then OK.
+
+Step 4: Write the LOAD DATA LOCAL INFILE Command
+Here is a complete example. Adjust the column names and date format to match your CSV.
+
+LOAD DATA LOCAL INFILE 'C:/temp/sales_orders.csv'   -- use forward slashes or double backslashes
+INTO TABLE sales_orders
+FIELDS TERMINATED BY ','
+OPTIONALLY ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES                     -- skip the header row
+(@order_number, @order_date, @ship_date, @customer_name_index, @channel, 
+ @currency_code, @warehouse_code, @delivery_region_index, @product_description_index, 
+ @order_quantity, @unit_price, @unit_cost, @total_revenue)
+SET
+    order_number = TRIM(@order_number),
+    order_date = STR_TO_DATE(TRIM(@order_date), '%e-%b-%y'),   -- convert '3-Feb-17' to DATE
+    ship_date = STR_TO_DATE(TRIM(@ship_date), '%e-%b-%y'),
+    customer_name_index = CAST(NULLIF(TRIM(@customer_name_index), '') AS UNSIGNED),
+    channel = TRIM(@channel),
+    currency_code = TRIM(@currency_code),
+    warehouse_code = TRIM(@warehouse_code),
+    delivery_region_index = CAST(NULLIF(TRIM(@delivery_region_index), '') AS UNSIGNED),
+    product_description_index = CAST(NULLIF(TRIM(@product_description_index), '') AS UNSIGNED),
+    order_quantity = CAST(NULLIF(TRIM(@order_quantity), '') AS UNSIGNED),
+    unit_price = CAST(NULLIF(TRIM(@unit_price), '') AS DECIMAL(14,2)),
+    unit_cost = CAST(NULLIF(TRIM(@unit_cost), '') AS DECIMAL(14,3)),
+    total_revenue = CAST(NULLIF(TRIM(@total_revenue), '') AS DECIMAL(16,2));
+
+Step 5: Run the Command
+Reconnect to the database (close the connection tab and open a new one).
