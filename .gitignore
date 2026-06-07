@@ -1,0 +1,18 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database dumps / local files
+*.sql.gz
+*.dump
+*.bak
+*.db
+*.sqlite
+
+# Editor files
+.vscode/
+.idea/
+
+# Python cache if you later add scripts
+__pycache__/
+*.pyc
